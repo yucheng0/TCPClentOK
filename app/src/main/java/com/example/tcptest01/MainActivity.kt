@@ -2,6 +2,7 @@ package com.example.tcptest01
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.GlobalScope
@@ -92,8 +93,19 @@ class MainActivity : AppCompatActivity() {
         btnSenData.setOnClickListener {
             GlobalScope.launch {
                 if (mSocket!!.isConnected) {
-                     datatext = editTextTextData.text.toString()
-                    sendData(datatext) //送資料一定要在協程做, 不然是錯誤的
+                    datatext = editTextTextData.text.toString()
+                    println("datatext = $datatext")
+                    if (datatext != "") {
+                        println("我有資料 ")
+                        sendData(datatext)
+                    }  //送資料一定要在協程做, 不然是錯誤的
+
+                    else {
+                        println("資料不能為空 ")
+                               runOnUiThread {
+                                   Toast.makeText(this@MainActivity,"資料不能為空", Toast.LENGTH_SHORT).show()
+                               }
+                    }
                 }
             }
         }
@@ -120,24 +132,28 @@ class MainActivity : AppCompatActivity() {
             outputStream = mSocket.getOutputStream()
 
             if (hexconvert == true) {
-                val size = message.length/2
-          //      println ("size = $size")
+                val size = message.length / 2  // 忽略奇數值, 若輸入3個字串只處理1個byte
+                // val r = message.length % 2 取餘
+
                 val msg = ByteArray(size)           // 取得size
                 //取值
-             for (i in 0..size-1) {
-                    msg[i] = message.subSequence(i*2,i*2+2).toString().toInt(16).toByte()      //取2個
-                   }
+                for (i in 0..size - 1) {
+                    msg[i] = message.subSequence(i * 2, i * 2 + 2)
+                        .toString()
+                        .toInt(16)
+                        .toByte()
+                }
 
-       //         msg[1] = message.subSequence(2,4).toString().toInt(16).toByte()
-            val a =  message.substring(0,2)
-              val b = message.substring(2,4)
+                //         msg[1] = message.subSequence(2,4).toString().toInt(16).toByte()
+                val a = message.substring(0, 2)
+                val b = message.substring(2, 4)
                 val c = a.toString().toInt(16)
-               val d = b.toString().toInt(16)
-               println ("a= $a , b =$b,c= $c , d =$d ")
-              //  msg[0]=c.toByte()
-              //  msg[1]=d.toByte()
-             //   msg[0] = 0xaa.toByte()
-              //  msg[1] = 0xdd.toByte()
+                val d = b.toString().toInt(16)
+                println("a= $a , b =$b,c= $c , d =$d ")
+                //  msg[0]=c.toByte()
+                //  msg[1]=d.toByte()
+                //   msg[0] = 0xaa.toByte()
+                //  msg[1] = 0xdd.toByte()
                 outputStream!!.write(msg)           //寫入資料 （Hex16進制）
             } else {
                 outputStream!!.write(message.toByteArray())   //寫入資料 （ASCII）
